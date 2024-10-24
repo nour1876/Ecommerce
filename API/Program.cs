@@ -1,9 +1,11 @@
+using Core.Interfaces;
 using Infrastructure.Data; // Ensure this namespace contains your StoreContext
 using Microsoft.EntityFrameworkCore; // Required for EF Core
 
 var builder = WebApplication.CreateBuilder(args);
 
 SQLitePCL.Batteries.Init();
+builder.Services.AddScoped<IProductRepository,ProductRepository>();
 // Add services to the container.
 builder.Services.AddControllers();
 
