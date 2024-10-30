@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 SQLitePCL.Batteries.Init();
 builder.Services.AddScoped<IProductRepository,ProductRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 // Add services to the container.
 builder.Services.AddControllers();
