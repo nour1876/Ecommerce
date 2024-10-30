@@ -1,3 +1,5 @@
+using API.Helpers;
+using AutoMapper;
 using Core.Interfaces;
 using Infrastructure.Data; // Ensure this namespace contains your StoreContext
 using Microsoft.EntityFrameworkCore; // Required for EF Core
@@ -7,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 SQLitePCL.Batteries.Init();
 builder.Services.AddScoped<IProductRepository,ProductRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
+builder.Services.AddAutoMapper(typeof(MappingProfiles));
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -43,6 +45,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
