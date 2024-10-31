@@ -1,14 +1,16 @@
+using API.Errors;
+using API.Extensions;
 using API.Helpers;
 using AutoMapper;
 using Core.Interfaces;
 using Infrastructure.Data; // Ensure this namespace contains your StoreContext
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // Required for EF Core
 
 var builder = WebApplication.CreateBuilder(args);
 
 SQLitePCL.Batteries.Init();
-builder.Services.AddScoped<IProductRepository,ProductRepository>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
 // Add services to the container.
 builder.Services.AddControllers();
@@ -16,10 +18,12 @@ builder.Services.AddControllers();
 // Configure the DbContext with SQLite
 builder.Services.AddDbContext<StoreContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+//Added By NoB
+builder.Services.AddApplicationServices();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//NoB
+builder.Services.AddSwaggerDocumentations();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -40,10 +44,10 @@ using (var scope = app.Services.CreateScope())
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerDocumentation();
 }
-
+    //errors
+app.UseStatusCodePagesWithReExecute("/errors/{0}");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAuthorization();
