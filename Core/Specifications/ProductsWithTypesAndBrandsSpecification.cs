@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,9 +10,28 @@ namespace Core.Specifications
 {
     public class ProductsWithTypesAndBrandsSpecification : BaseSpecification<Product>
     {
-        public ProductsWithTypesAndBrandsSpecification() {
+
+        public ProductsWithTypesAndBrandsSpecification(string sort) {
             AddInclude(x => x.ProductType);
             AddInclude(x=>x.ProductBrand);
+            //Sorting
+            AddOrderBy(x => x.Name);
+            if (!string.IsNullOrEmpty(sort))
+            {
+                switch(sort)
+                {
+                    case "PriceAsc":
+                        AddOrderBy(p=>p.Price); 
+                        break;
+                    case "PriceDesc":
+                        AddOrderByDescending(p => p.Price);
+                        break;
+                    default:
+                        AddOrderBy(n=>n.Name);
+                        break;
+
+                }
+            }
         
         }
         public ProductsWithTypesAndBrandsSpecification(int id)
