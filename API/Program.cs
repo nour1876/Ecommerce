@@ -13,6 +13,15 @@ SQLitePCL.Batteries.Init();
 
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAnyOrigin", policy =>
+    {
+        policy.AllowAnyOrigin()// Allow only the Angular app
+              .AllowAnyHeader() // Allow any headers
+              .AllowAnyMethod(); // Allow any HTTP method
+    });
+});
 builder.Services.AddControllers();
 
 // Configure the DbContext with SQLite
@@ -46,7 +55,8 @@ using (var scope = app.Services.CreateScope())
 {
     app.UseSwaggerDocumentation();
 }
-    //errors
+//errors
+app.UseCors("AllowAnyOrigin");
 app.UseStatusCodePagesWithReExecute("/errors/{0}");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
