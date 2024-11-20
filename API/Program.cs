@@ -8,7 +8,8 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders; // Required for EF Core
+using Microsoft.Extensions.FileProviders;
+using StackExchange.Redis; // Required for EF Core
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +31,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 // Configure the DbContext with SQLite
-//builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(c =>
+{
+    var configuration = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("Redis"), true);
+    return ConnectionMultiplexer.Connect(configuration);
+}
+ );
 builder.Services.AddDbContext<StoreContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 //Added By NoB
