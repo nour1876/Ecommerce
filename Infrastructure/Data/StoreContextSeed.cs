@@ -1,38 +1,39 @@
-﻿using Core.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Reflection;
 using System.Text.Json;
-using System.Threading.Tasks;
+using Core.Entities;
+
 
 namespace Infrastructure.Data
 {
     public class StoreContextSeed
     {
-        public static async Task SeedAsync(StoreContext context,ILoggerFactory loggerFactory)
+        public static async Task SeedAsync(StoreContext context)
         {
-            try
-            {
-                if(!context.ProductBrands.Any())
-                {
-                    var brandsData = File.ReadAllText(
-                        "../Infrastructure/Data/SeedData/brands.json"
-                        );
-                    var brands = JsonSerializer.Deserialize<List<ProductBrand>>(brandsData);
-                    foreach( var brand in brands )
-                    {
-                        context.ProductBrands.Add(brand);
-                    }
-                    await context.SaveChangesAsync();
-                }
+            var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            }catch (Exception ex)
+            if (!context.ProductBrands.Any())
             {
-
+                var brandsData = File.ReadAllText( "../Infrastructure/Data/SeedData/brands.json");
+                var brands = JsonSerializer.Deserialize<List<ProductBrand>>(brandsData);
+                context.ProductBrands.AddRange(brands);
             }
+
+            if (!context.ProductTypes.Any())
+            {
+                var typesData = File.ReadAllText("../Infrastructure/Data/SeedData/types.json");
+                var types = JsonSerializer.Deserialize<List<ProductType>>(typesData);
+                context.ProductTypes.AddRange(types);
+            }
+
+            if (!context.Products.Any())
+            {
+                var productsData = File.ReadAllText( "../Infrastructure/Data/SeedData/products.json");
+                var products = JsonSerializer.Deserialize<List<Product>>(productsData);
+                context.Products.AddRange(products);
+            }
+
+
+            if (context.ChangeTracker.HasChanges()) await context.SaveChangesAsync();
         }
     }
 }

@@ -4,14 +4,19 @@ using API.Helpers;
 using AutoMapper;
 using Core.Interfaces;
 using Infrastructure.Data; // Ensure this namespace contains your StoreContext
+using Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // Required for EF Core
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders; // Required for EF Core
 
 var builder = WebApplication.CreateBuilder(args);
 
 SQLitePCL.Batteries.Init();
 
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
+
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -25,6 +30,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 // Configure the DbContext with SQLite
+//builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
 builder.Services.AddDbContext<StoreContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 //Added By NoB
@@ -35,21 +41,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDocumentations();
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var loggerfactory = services.GetRequiredService<ILoggerFactory>();
-    try
-    {
-        var context = services.GetRequiredService<StoreContext>();
-        await context.Database.MigrateAsync();
-    }
-    catch (Exception ex){
-        var logger = loggerfactory.CreateLogger<Program>();
-        logger.LogError(ex, "An  Error occured during migration");
-
-    }
-}
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
 {
@@ -59,7 +50,24 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("AllowAnyOrigin");
 app.UseStatusCodePagesWithReExecute("/errors/{0}");
 app.UseHttpsRedirection();
+app.UseRouting();
 app.UseStaticFiles();
+
 app.UseAuthorization();
 app.MapControllers();
+
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+var context = services.GetRequiredService<StoreContext>();
+var logger = services.GetRequiredService<ILogger<Program>>();
+try
+{
+    await context.Database.MigrateAsync();
+    await StoreContextSeed.SeedAsync(context);
+   
+}
+catch (Exception ex)
+{
+    logger.LogError(ex, "An error occured during migration");
+}
 app.Run();
