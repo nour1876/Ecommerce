@@ -2,8 +2,10 @@ using API.Errors;
 using API.Extensions;
 using API.Helpers;
 using AutoMapper;
+using Core.Entities.Identity;
 using Core.Interfaces;
 using Infrastructure.Data; // Ensure this namespace contains your StoreContext
+using Infrastructure.Identity;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -39,8 +41,13 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(c =>
  );
 builder.Services.AddDbContext<StoreContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AppIdentityDbContext>(x =>
+{
+    x.UseSqlite(builder.Configuration.GetConnectionString("IdentityConnection"));
+});
 //Added By NoB
 builder.Services.AddApplicationServices();
+builder.Services.AddIdentityServices(builder.Configuration);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 //NoB
@@ -58,18 +65,24 @@ app.UseStatusCodePagesWithReExecute("/errors/{0}");
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseStaticFiles();
-
+app.UseCors("CorsPolicy");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
 var context = services.GetRequiredService<StoreContext>();
+var userManager = services.GetRequiredService<UserManager<AppUser>>();
+var identityContext = services.GetRequiredService<AppIdentityDbContext>();
 var logger = services.GetRequiredService<ILogger<Program>>();
 try
 {
     await context.Database.MigrateAsync();
     await StoreContextSeed.SeedAsync(context);
+  
+    await identityContext.Database.MigrateAsync();
+    await AppIdentityDbContextSeed.SeedUsersAsync(userManager);
    
 }
 catch (Exception ex)
