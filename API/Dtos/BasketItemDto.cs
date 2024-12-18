@@ -13,7 +13,7 @@ namespace API.Dtos
         public double ProductPrice { get; set; }
         [Required]
         [Range(1, double.MaxValue,ErrorMessage ="Quantity must be at least 1")]
-        public int Quality { get; set; }
+        public int Quantity { get; set; }
         [Required]
         public string PictureUrl { get; set; }
         [Required]
